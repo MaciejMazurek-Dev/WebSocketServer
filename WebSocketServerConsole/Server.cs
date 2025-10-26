@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Net.Sockets;
+using System.Text;
 using Serilog;
 
 namespace WebSocketServerConsole
@@ -27,18 +28,29 @@ namespace WebSocketServerConsole
             _iPEndPoint = new IPEndPoint(parsedIpAddress, port);
         }
 
-        public async void Start()
+        public async Task Start()
         {
-            isRunning = true;
-
-            while (isRunning)
+            _socket.Bind(_iPEndPoint);
+            _socket.Listen();
+            try
             {
-                _socket.Bind(_iPEndPoint);
-                _socket.Listen();
+                isRunning = true;
+
                 Log.Information("Server started.");
                 Log.Information("Listening on IP address: " + _iPEndPoint.Address.ToString() + ":" + _iPEndPoint.Port);
+                Socket requestHandler = await _socket.AcceptAsync();
+                while (isRunning)
+                {
+                    byte[] buffer = new byte[1024];
+                    int bytesReceived = await requestHandler.ReceiveAsync(buffer);
 
-                Socket request = await _socket.AcceptAsync();
+                    string message = Encoding.UTF8.GetString(buffer, 0, bytesReceived);
+                    Log.Information("Message received: " + message);
+                }
+            }
+            catch(Exception ex)
+            {
+                Log.Warning("Exception: " + ex.Message);
             }
             Stop();
         }
