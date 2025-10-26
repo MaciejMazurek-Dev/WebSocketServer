@@ -1,10 +1,16 @@
-﻿namespace WebSocketServerConsole
+﻿using Serilog;
+
+namespace WebSocketServerConsole
 {
-    internal class Program
+    public class Program
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Hello, World!");
+            Log.Logger = new LoggerConfiguration().WriteTo.Console().CreateLogger();
+
+
+            Server server = new();
+            server.Start();
         }
     }
 }
